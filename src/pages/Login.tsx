@@ -24,7 +24,7 @@ const LoginPage = () => {
 
   const handleLogin = async (data: LoginInput) => {
     const res = await axios.post<{ access_token: string }>(
-      `${import.meta.env.VITE_API_URL}/api/auth/login`,
+      `${import.meta.env.VITE_API_URL}/auth/login`,
       {
         email: data.email,
         password: data.password,
