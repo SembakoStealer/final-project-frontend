@@ -1,59 +1,41 @@
-import { useState } from 'react';
+// RegisterPage.tsx
 import { useNavigate, Link } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import axios from 'axios';
+import { useState } from 'react';
+
+type RegisterInput = {
+  username: string;
+  email: string;
+  password: string;
+};
 
 const RegisterPage = () => {
   const navigate = useNavigate();
-
-  const [formData, setFormData] = useState({
-    username: '',
-    email: '',
-    password: '',
-    rememberMe: false,
-  });
-
   const [showPassword, setShowPassword] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value, type, checked } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value,
-    }));
-  };
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<RegisterInput>();
 
-  const togglePasswordVisibility = () => {
-    setShowPassword(prev => !prev);
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const onSubmit = async (data: RegisterInput) => {
     setErrorMessage('');
     setIsSubmitting(true);
-
     try {
-      const response = await fetch('http://localhost:3000/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          username: formData.username,
-          email: formData.email,
-          password: formData.password,
-        }),
-      });
+      const response = await axios.post<{ access_token: string }>(
+        '/api/auth/register',
+        data
+      );
 
-      if (response.ok) {
-        const data = await response.json();
-        localStorage.setItem('token', data.access_token);
-        navigate('/home');
-      } else {
-        const errorData = await response.json();
-        setErrorMessage(errorData.message || 'Registration failed');
-      }
-    } catch (error) {
-      setErrorMessage('Something went wrong. Please try again later.');
-      console.error(error);
+      localStorage.setItem('token', response.data.access_token);
+      navigate('/catalog'); // redirect to homepage after registration
+    } catch (error: any) {
+      const message = error.response?.data?.message || 'Registration failed';
+      setErrorMessage(message);
     } finally {
       setIsSubmitting(false);
     }
@@ -68,7 +50,7 @@ const RegisterPage = () => {
           <p className="mb-4 text-sm text-red-600 text-center">{errorMessage}</p>
         )}
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit(onSubmit)}>
           {/* Username */}
           <div className="mb-4">
             <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
@@ -76,13 +58,11 @@ const RegisterPage = () => {
             </label>
             <input
               id="username"
-              name="username"
               type="text"
-              value={formData.username}
-              onChange={handleChange}
-              required
+              {...register('username', { required: 'Username is required' })}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-gray-400"
             />
+            {errors.username && <p className="text-sm text-red-500 mt-1">{errors.username.message}</p>}
           </div>
 
           {/* Email */}
@@ -92,13 +72,14 @@ const RegisterPage = () => {
             </label>
             <input
               id="email"
-              name="email"
               type="email"
-              value={formData.email}
-              onChange={handleChange}
-              required
+              {...register('email', {
+                required: 'Email is required',
+                pattern: { value: /^\S+@\S+$/i, message: 'Invalid email address' },
+              })}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-gray-400"
             />
+            {errors.email && <p className="text-sm text-red-500 mt-1">{errors.email.message}</p>}
           </div>
 
           {/* Password */}
@@ -109,7 +90,7 @@ const RegisterPage = () => {
               </label>
               <button
                 type="button"
-                onClick={togglePasswordVisibility}
+                onClick={() => setShowPassword((prev) => !prev)}
                 className="text-sm text-gray-500 hover:underline"
               >
                 {showPassword ? 'Hide' : 'Show'}
@@ -117,28 +98,14 @@ const RegisterPage = () => {
             </div>
             <input
               id="password"
-              name="password"
               type={showPassword ? 'text' : 'password'}
-              value={formData.password}
-              onChange={handleChange}
-              required
+              {...register('password', {
+                required: 'Password is required',
+                minLength: { value: 6, message: 'Password must be at least 6 characters' },
+              })}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-gray-400"
             />
-          </div>
-
-          {/* Remember Me */}
-          <div className="flex items-center mb-6">
-            <input
-              id="rememberMe"
-              name="rememberMe"
-              type="checkbox"
-              checked={formData.rememberMe}
-              onChange={handleChange}
-              className="h-4 w-4 text-gray-600 focus:ring-gray-500 border-gray-300 rounded"
-            />
-            <label htmlFor="rememberMe" className="ml-2 text-sm text-gray-700">
-              Remember me
-            </label>
+            {errors.password && <p className="text-sm text-red-500 mt-1">{errors.password.message}</p>}
           </div>
 
           {/* Submit Button */}
@@ -146,9 +113,7 @@ const RegisterPage = () => {
             type="submit"
             disabled={isSubmitting}
             className={`w-full py-2 px-4 rounded-md text-white font-medium focus:outline-none transition ${
-              isSubmitting
-                ? 'bg-gray-300 cursor-not-allowed'
-                : 'bg-gray-600 hover:bg-gray-700'
+              isSubmitting ? 'bg-gray-300 cursor-not-allowed' : 'bg-gray-600 hover:bg-gray-700'
             }`}
           >
             {isSubmitting ? 'Creating...' : 'Create Account'}
