@@ -131,7 +131,7 @@ const CatalogPage = () => {
           name: newProduct.name,
           description: newProduct.description,
           price: parseFloat(newProduct.price),
-          categoryId: newProduct.categoryId,
+          categoryId: Number(newProduct.categoryId),
           stock: parseInt(newProduct.stock, 10)
         }),
       });
