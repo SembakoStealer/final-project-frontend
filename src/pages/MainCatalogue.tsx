@@ -265,7 +265,7 @@ const CatalogPage = () => {
                   <td className="border p-2">{product.description}</td>
                   <td className="border p-2">${product.price.toFixed(2)}</td>
                   <td className="border p-2">{product.category.name}</td>
-                  <td className="border p-2">{product.stock}</td>
+                  <td className="border p-2">${Number(product.price).toFixed(2)}</td>
                   <td className="border p-2">
                     <div className="flex space-x-2">
                       <button onClick={() => handleEditProduct(product.id)} className="text-blue-500">Edit</button>
