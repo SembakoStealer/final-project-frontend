@@ -1,116 +1,89 @@
+// LoginPage.tsx
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 
-const RegisterPage = () => {
-  const navigate = useNavigate();
-
-  const [formData, setFormData] = useState({
-    username: '',
-    email: '',
+const LoginPage = () => {
+  const [credentials, setCredentials] = useState({
+    emailOrUsername: '',
     password: '',
-    rememberMe: false,
+    rememberMe: false
   });
-
   const [showPassword, setShowPassword] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errorMessage, setErrorMessage] = useState('');
+  const navigate = useNavigate();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value,
-    }));
-  };
-
-  const togglePasswordVisibility = () => {
-    setShowPassword(prev => !prev);
+    setCredentials({
+      ...credentials,
+      [name]: type === 'checkbox' ? checked : value
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setErrorMessage('');
-    setIsSubmitting(true);
-
+    
     try {
-      const response = await fetch('http://localhost:3000/auth/register', {
+      // Replace with your actual API endpoint
+      const response = await fetch('http://localhost:3000/auth/login', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json'
+        },
         body: JSON.stringify({
-          username: formData.username,
-          email: formData.email,
-          password: formData.password,
-        }),
+          username: credentials.emailOrUsername,
+          password: credentials.password
+        })
       });
 
       if (response.ok) {
         const data = await response.json();
+        // Store token in localStorage or a secure cookie
         localStorage.setItem('token', data.access_token);
+        // Redirect to home page
         navigate('/home');
       } else {
-        const errorData = await response.json();
-        setErrorMessage(errorData.message || 'Registration failed');
+        // Handle login error
+        console.error('Login failed');
       }
     } catch (error) {
-      setErrorMessage('Something went wrong. Please try again later.');
-      console.error(error);
-    } finally {
-      setIsSubmitting(false);
+      console.error('Error during login:', error);
     }
   };
 
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
+  };
+
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-50 px-4">
-      <div className="w-full max-w-md p-8 bg-white rounded-lg shadow border border-gray-200">
-        <h1 className="text-2xl font-bold text-center mb-6">Create an Account</h1>
-
-        {errorMessage && (
-          <p className="mb-4 text-sm text-red-600 text-center">{errorMessage}</p>
-        )}
-
+    <div className="flex items-center justify-center min-h-screen bg-gray-50">
+      <div className="w-full max-w-md p-8 bg-white rounded-lg shadow-sm border border-gray-100">
+        <h1 className="text-2xl font-semibold text-center mb-6">Log In</h1>
+        
         <form onSubmit={handleSubmit}>
-          {/* Username */}
           <div className="mb-4">
-            <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
-              Username
+            <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="emailOrUsername">
+              Email or username
             </label>
             <input
-              id="username"
-              name="username"
+              id="emailOrUsername"
+              name="emailOrUsername"
               type="text"
-              value={formData.username}
+              value={credentials.emailOrUsername}
               onChange={handleChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-400"
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-gray-400"
             />
           </div>
-
-          {/* Email */}
+          
           <div className="mb-4">
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-              Email
-            </label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              value={formData.email}
-              onChange={handleChange}
-              required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-gray-400"
-            />
-          </div>
-
-          {/* Password */}
-          <div className="mb-4">
-            <div className="flex justify-between items-center mb-1">
-              <label htmlFor="password" className="text-sm font-medium text-gray-700">
+            <div className="flex justify-between mb-1">
+              <label className="block text-sm font-medium text-gray-700" htmlFor="password">
                 Password
               </label>
-              <button
-                type="button"
+              <button 
+                type="button" 
                 onClick={togglePasswordVisibility}
-                className="text-sm text-gray-500 hover:underline"
+                className="text-sm text-gray-500 flex items-center"
               >
                 {showPassword ? 'Hide' : 'Show'}
               </button>
@@ -119,52 +92,44 @@ const RegisterPage = () => {
               id="password"
               name="password"
               type={showPassword ? 'text' : 'password'}
-              value={formData.password}
+              value={credentials.password}
               onChange={handleChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-400"
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-gray-400"
             />
           </div>
-
-          {/* Remember Me */}
+          
           <div className="flex items-center mb-6">
             <input
               id="rememberMe"
               name="rememberMe"
               type="checkbox"
-              checked={formData.rememberMe}
+              checked={credentials.rememberMe}
               onChange={handleChange}
               className="h-4 w-4 text-gray-600 focus:ring-gray-500 border-gray-300 rounded"
             />
-            <label htmlFor="rememberMe" className="ml-2 text-sm text-gray-700">
-              Remember me
+            <label className="ml-2 block text-sm text-gray-700" htmlFor="rememberMe">
+              Remember Me
             </label>
           </div>
-
-          {/* Submit Button */}
+          
           <button
             type="submit"
-            disabled={isSubmitting}
-            className={`w-full py-2 px-4 rounded-md text-white font-medium focus:outline-none transition ${
-              isSubmitting
-                ? 'bg-gray-300 cursor-not-allowed'
-                : 'bg-gray-600 hover:bg-gray-700'
-            }`}
+            className="w-full py-2 px-4 bg-gray-500 hover:bg-gray-600 rounded-md text-white font-medium focus:outline-none mb-4"
           >
-            {isSubmitting ? 'Creating...' : 'Create Account'}
+            Log In
           </button>
-
-          {/* Footer */}
-          <p className="text-sm text-center mt-4">
-            Already have an account?{' '}
-            <Link to="/login" className="font-medium text-gray-800 hover:underline">
-              Log In
+          
+          <div className="text-center">
+            <span className="text-gray-600 text-sm">Don't have an account? </span>
+            <Link to="/register" className="text-sm font-medium text-black hover:underline">
+              Sign up
             </Link>
-          </p>
+          </div>
         </form>
       </div>
     </div>
   );
 };
 
-export default RegisterPage;
+export default LoginPage;
