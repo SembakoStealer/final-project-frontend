@@ -1,6 +1,7 @@
 // src/pages/ProfilePage.tsx
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 interface UserProfile {
   name: string;
@@ -28,32 +29,30 @@ const ProfilePage = () => {
           return;
         }
 
-        // Replace with your actual API endpoint
-        const response = await fetch('http://localhost:3000/users/profile', {
-          headers: {
-            'Authorization': `Bearer ${token}`
+        const res = await axios.get<UserProfile>(
+          `${import.meta.env.VITE_API_URL}/api/users/profile`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
           }
-        });
+        );
 
-        if (response.ok) {
-          const data = await response.json();
-          
-          // Format the date string (assuming createdAt is a ISO date string)
-          const createdAtDate = new Date(data.createdAt);
-          const formattedDate = createdAtDate.toISOString().split('T')[0]; // Format as YYYY-MM-DD
-          
-          setProfile({
-            name: data.name || '',
-            email: data.email || '',
-            bio: data.bio || '',
-            createdAt: formattedDate
-          });
-        } else {
-          console.error('Failed to fetch profile');
-          navigate('/login');
-        }
+        const data = res.data;
+
+        // Format createdAt date
+        const createdAtDate = new Date(data.createdAt);
+        const formattedDate = createdAtDate.toISOString().split('T')[0];
+
+        setProfile({
+          name: data.name || '',
+          email: data.email || '',
+          bio: data.bio || '',
+          createdAt: formattedDate
+        });
       } catch (error) {
         console.error('Error fetching profile:', error);
+        navigate('/login');
       } finally {
         setLoading(false);
       }
@@ -85,7 +84,7 @@ const ProfilePage = () => {
           Back
         </button>
       </div>
-      
+
       {/* Profile card */}
       <div className="container mx-auto px-4">
         <div className="max-w-lg mx-auto bg-white rounded-lg shadow-sm border border-gray-100 p-6">
@@ -93,7 +92,7 @@ const ProfilePage = () => {
           <div className="flex justify-center mb-6">
             <div className="w-32 h-32 rounded-full bg-gray-200"></div>
           </div>
-          
+
           {/* Profile info */}
           <div className="space-y-4">
             <div>
@@ -105,7 +104,7 @@ const ProfilePage = () => {
                 className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white"
               />
             </div>
-            
+
             <div>
               <label className="block text-sm font-bold mb-2">Email:</label>
               <input
@@ -115,7 +114,7 @@ const ProfilePage = () => {
                 className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white"
               />
             </div>
-            
+
             <div>
               <label className="block text-sm font-bold mb-2">Bio:</label>
               <input
@@ -125,7 +124,7 @@ const ProfilePage = () => {
                 className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white"
               />
             </div>
-            
+
             <div>
               <label className="block text-sm font-bold mb-2">Created at:</label>
               <input
