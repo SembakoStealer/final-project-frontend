@@ -23,10 +23,14 @@ const LoginPage = () => {
   } = useForm<LoginInput>();
 
   const handleLogin = async (data: LoginInput) => {
-    const res = await axios.post<{ access_token: string }>('/api/auth/login', {
-      email: data.email,
-      password: data.password,
-    });
+    const res = await axios.post<{ access_token: string }>(
+      `${import.meta.env.VITE_API_URL}/api/auth/login`,
+      {
+        email: data.email,
+        password: data.password,
+      }
+    );
+    
 
     if (res.data?.access_token) {
       login(res.data.access_token);

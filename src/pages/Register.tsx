@@ -27,7 +27,7 @@ const RegisterPage = () => {
     setIsSubmitting(true);
     try {
       const response = await axios.post<{ access_token: string }>(
-        '/api/auth/register',
+        `${import.meta.env.VITE_API_URL}/api/auth/register`,
         data
       );
 
