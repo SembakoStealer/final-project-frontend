@@ -1,139 +1,170 @@
-import { useMutation } from "@tanstack/react-query";
-import { useForm } from "react-hook-form";
-import { useNavigate } from "react-router-dom";
-import axios from "../utils/AxiosInstance";
+import { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 
-export type RegisterInput = {
-  email: string;
-  username: string;
-  password: string;
-};
-
-export const Register = () => {
+const RegisterPage = () => {
   const navigate = useNavigate();
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors }
-  } = useForm<RegisterInput>();
-  const handleRegister = async (data: RegisterInput) => {
+  const [formData, setFormData] = useState({
+    username: '',
+    email: '',
+    password: '',
+    rememberMe: false,
+  });
+
+  const [showPassword, setShowPassword] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value, type, checked } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value,
+    }));
+  };
+
+  const togglePasswordVisibility = () => {
+    setShowPassword(prev => !prev);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMessage('');
+    setIsSubmitting(true);
+
     try {
-      await axios.post("/api/auth/register", {
-        email: data.email,
-        username: data.username,
-        password: data.password
+      const response = await fetch('http://localhost:3000/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: formData.username,
+          email: formData.email,
+          password: formData.password,
+        }),
       });
-      alert("User successfully registered");
-      navigate("/login");
-    } catch (err) {
-      alert("Username or email already registered");
+
+      if (response.ok) {
+        const data = await response.json();
+        localStorage.setItem('token', data.access_token);
+        navigate('/home');
+      } else {
+        const errorData = await response.json();
+        setErrorMessage(errorData.message || 'Registration failed');
+      }
+    } catch (error) {
+      setErrorMessage('Something went wrong. Please try again later.');
+      console.error(error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
-  const { mutate } = useMutation({ mutationFn: handleRegister });
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
-      <div className="max-w-md w-full bg-white p-8 rounded-2xl shadow-md">
-        <h2 className="text-2xl font-bold text-center mb-6 text-gray-800">
-          Create an Account
-        </h2>
+    <div className="flex items-center justify-center min-h-screen bg-gray-50 px-4">
+      <div className="w-full max-w-md p-8 bg-white rounded-lg shadow border border-gray-200">
+        <h1 className="text-2xl font-bold text-center mb-6">Create an Account</h1>
 
-        <form
-          className="space-y-5"
-          onSubmit={handleSubmit((data) => mutate(data))}
-        >
-          <div>
-            <label
-              htmlFor="username"
-              className="block text-sm font-medium text-gray-700"
-            >
+        {errorMessage && (
+          <p className="mb-4 text-sm text-red-600 text-center">{errorMessage}</p>
+        )}
+
+        <form onSubmit={handleSubmit}>
+          {/* Username */}
+          <div className="mb-4">
+            <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
               Username
             </label>
             <input
               id="username"
+              name="username"
               type="text"
+              value={formData.username}
+              onChange={handleChange}
               required
-              className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500"
-              placeholder="yourusername"
-              {...register("username")}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-gray-400"
             />
-
-            {errors.username && (
-              <p className="text-red-600 text-xs italic" id="titleError">
-                Username is required.
-              </p>
-            )}
           </div>
 
-          <div>
-            <label
-              htmlFor="email"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Email address
+          {/* Email */}
+          <div className="mb-4">
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+              Email
             </label>
             <input
               id="email"
+              name="email"
               type="email"
+              value={formData.email}
+              onChange={handleChange}
               required
-              className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500"
-              placeholder="you@example.com"
-              {...register("email")}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-gray-400"
             />
-            {errors.email && (
-              <p className="text-red-600 text-xs italic" id="titleError">
-                Email is required.
-              </p>
-            )}
           </div>
 
-          <div>
-            <label
-              htmlFor="password"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Password
-            </label>
+          {/* Password */}
+          <div className="mb-4">
+            <div className="flex justify-between items-center mb-1">
+              <label htmlFor="password" className="text-sm font-medium text-gray-700">
+                Password
+              </label>
+              <button
+                type="button"
+                onClick={togglePasswordVisibility}
+                className="text-sm text-gray-500 hover:underline"
+              >
+                {showPassword ? 'Hide' : 'Show'}
+              </button>
+            </div>
             <input
               id="password"
-              type="password"
+              name="password"
+              type={showPassword ? 'text' : 'password'}
+              value={formData.password}
+              onChange={handleChange}
               required
-              className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500"
-              placeholder="••••••••"
-              {...register("password")}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-gray-400"
             />
-            {errors.password && (
-              <p className="text-red-600 text-xs italic" id="titleError">
-                Password is required.
-              </p>
-            )}
           </div>
 
-          <div>
-            <button
-              type="submit"
-              className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition duration-200"
-            >
-              Register
-            </button>
+          {/* Remember Me */}
+          <div className="flex items-center mb-6">
+            <input
+              id="rememberMe"
+              name="rememberMe"
+              type="checkbox"
+              checked={formData.rememberMe}
+              onChange={handleChange}
+              className="h-4 w-4 text-gray-600 focus:ring-gray-500 border-gray-300 rounded"
+            />
+            <label htmlFor="rememberMe" className="ml-2 text-sm text-gray-700">
+              Remember me
+            </label>
           </div>
-        </form>
 
-        <p className="mt-4 text-center text-sm text-gray-600">
-          Already have an account?{" "}
-          <a
-            onClick={() => {
-              navigate("/login");
-            }}
-            className="text-blue-600 hover:underline"
+          {/* Submit Button */}
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className={`w-full py-2 px-4 rounded-md text-white font-medium focus:outline-none transition ${
+              isSubmitting
+                ? 'bg-gray-300 cursor-not-allowed'
+                : 'bg-gray-600 hover:bg-gray-700'
+            }`}
           >
-            Login
-          </a>
-        </p>
+            {isSubmitting ? 'Creating...' : 'Create Account'}
+          </button>
+
+          {/* Footer */}
+          <p className="text-sm text-center mt-4">
+            Already have an account?{' '}
+            <Link to="/login" className="font-medium text-gray-800 hover:underline">
+              Log In
+            </Link>
+          </p>
+        </form>
       </div>
     </div>
   );
 };
 
-export default Register;
+export default RegisterPage;
