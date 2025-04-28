@@ -39,17 +39,8 @@ const CatalogPage = () => {
 
   const fetchCategories = async () => {
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        navigate('/login');
-        return;
-      }
-
-      const response = await fetch('http://localhost:3000/categories', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      // Remove token check and redirect
+      const response = await fetch('http://localhost:3000/categories');
 
       if (response.ok) {
         const data = await response.json();
@@ -62,21 +53,12 @@ const CatalogPage = () => {
 
   const fetchProducts = async () => {
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        navigate('/login');
-        return;
-      }
-
+      // Remove token check and redirect
       const url = activeCategory && activeCategory !== 'All'
         ? `http://localhost:3000/products?categoryId=${activeCategory}`
         : 'http://localhost:3000/products';
 
-      const response = await fetch(url, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      const response = await fetch(url);
 
       if (response.ok) {
         const data = await response.json();
@@ -102,6 +84,13 @@ const CatalogPage = () => {
 
     try {
       const token = localStorage.getItem('token');
+      // Check if user is logged in for actions that modify data
+      if (!token) {
+        alert('Please log in to add categories');
+        navigate('/login');
+        return;
+      }
+
       const response = await fetch('http://localhost:3000/categories', {
         method: 'POST',
         headers: {
@@ -127,6 +116,13 @@ const CatalogPage = () => {
     
     try {
       const token = localStorage.getItem('token');
+      // Check if user is logged in for actions that modify data
+      if (!token) {
+        alert('Please log in to add products');
+        navigate('/login');
+        return;
+      }
+
       const response = await fetch('http://localhost:3000/products', {
         method: 'POST',
         headers: {
@@ -153,17 +149,32 @@ const CatalogPage = () => {
   };
 
   const handleEditProduct = (productId: string) => {
+    // Check if user is logged in for actions that modify data
+    const token = localStorage.getItem('token');
+    if (!token) {
+      alert('Please log in to edit products');
+      navigate('/login');
+      return;
+    }
+    
     // Navigate to edit product page or open edit modal
     console.log('Edit product:', productId);
   };
 
   const handleDeleteProduct = async (productId: string) => {
+    // Check if user is logged in for actions that modify data
+    const token = localStorage.getItem('token');
+    if (!token) {
+      alert('Please log in to delete products');
+      navigate('/login');
+      return;
+    }
+    
     if (!window.confirm('Are you sure you want to delete this product?')) {
       return;
     }
     
     try {
-      const token = localStorage.getItem('token');
       const response = await fetch(`http://localhost:3000/products/${productId}`, {
         method: 'DELETE',
         headers: {
@@ -228,7 +239,14 @@ const CatalogPage = () => {
           <h1 className="text-2xl font-bold">PRODUCT CATALOG</h1>
           <div 
             className="w-10 h-10 bg-gray-300 rounded-full cursor-pointer"
-            onClick={() => navigate('/profile')}
+            onClick={() => {
+              const token = localStorage.getItem('token');
+              if (token) {
+                navigate('/profile');
+              } else {
+                navigate('/login');
+              }
+            }}
           >
             {/* Profile icon */}
             <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
