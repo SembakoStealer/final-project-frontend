@@ -9,7 +9,9 @@ interface Category {
 interface Product {
   id: string;
   name: string;
+  description: string;
   price: number;
+  stock: number;
   categoryId: string;
   category: {
     name: string;
@@ -25,7 +27,13 @@ const CatalogPage = () => {
   const [showAddCategoryModal, setShowAddCategoryModal] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
   const [showAddProductModal, setShowAddProductModal] = useState(false);
-  const [newProduct, setNewProduct] = useState({ name: '', price: '', categoryId: '' });
+  const [newProduct, setNewProduct] = useState({ 
+    name: '', 
+    description: '', 
+    price: '', 
+    categoryId: '',
+    stock: '' 
+  });
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -121,15 +129,17 @@ const CatalogPage = () => {
         },
         body: JSON.stringify({
           name: newProduct.name,
+          description: newProduct.description,
           price: parseFloat(newProduct.price),
           categoryId: newProduct.categoryId,
+          stock: parseInt(newProduct.stock, 10)
         }),
       });
 
       if (response.ok) {
         const addedProduct = await response.json();
         setProducts([...products, addedProduct]);
-        setNewProduct({ name: '', price: '', categoryId: '' });
+        setNewProduct({ name: '', description: '', price: '', categoryId: '', stock: '' });
         setShowAddProductModal(false);
         fetchProducts();
       }
@@ -175,7 +185,7 @@ const CatalogPage = () => {
     }
   };
 
-  const handleProductInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleProductInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setNewProduct({
       ...newProduct,
@@ -241,8 +251,10 @@ const CatalogPage = () => {
             <thead>
               <tr className="border">
                 <th className="border p-2 text-left">Name</th>
-                <th className="border p-2 text-left">Price</th>
+                <th className="border p-2 text-left">Description</th>
+                <th className="border p-2 text-left">Price</th> 
                 <th className="border p-2 text-left">Category</th>
+                <th className="border p-2 text-left">Stock</th>
                 <th className="border p-2 text-left">Actions</th>
               </tr>
             </thead>
@@ -250,8 +262,10 @@ const CatalogPage = () => {
               {products.map((product) => (
                 <tr key={product.id} className="border">
                   <td className="border p-2">{product.name}</td>
+                  <td className="border p-2">{product.description}</td>
                   <td className="border p-2">${product.price.toFixed(2)}</td>
                   <td className="border p-2">{product.category.name}</td>
+                  <td className="border p-2">{product.stock}</td>
                   <td className="border p-2">
                     <div className="flex space-x-2">
                       <button onClick={() => handleEditProduct(product.id)} className="text-blue-500">Edit</button>
@@ -317,6 +331,15 @@ const CatalogPage = () => {
                 placeholder="Product name"
                 required
               />
+              <textarea
+                name="description"
+                value={newProduct.description}
+                onChange={handleProductInputChange}
+                className="w-full px-3 py-2 border rounded-md mb-4"
+                placeholder="Product description"
+                rows={3}
+                required
+              />
               <input
                 type="number"
                 name="price"
@@ -324,6 +347,8 @@ const CatalogPage = () => {
                 onChange={handleProductInputChange}
                 className="w-full px-3 py-2 border rounded-md mb-4"
                 placeholder="Price"
+                step="0.01"
+                min="0"
                 required
               />
               <select
@@ -340,6 +365,16 @@ const CatalogPage = () => {
                   </option>
                 ))}
               </select>
+              <input
+                type="number"
+                name="stock"
+                value={newProduct.stock}
+                onChange={handleProductInputChange}
+                className="w-full px-3 py-2 border rounded-md mb-4"
+                placeholder="Stock quantity"
+                min="0"
+                required
+              />
               <div className="flex justify-end space-x-2">
                 <button type="button" onClick={() => setShowAddProductModal(false)} className="px-4 py-2 border rounded-md">
                   Cancel
