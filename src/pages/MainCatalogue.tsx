@@ -27,6 +27,7 @@ const CatalogPage = () => {
   const [showAddCategoryModal, setShowAddCategoryModal] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
   const [showAddProductModal, setShowAddProductModal] = useState(false);
+  const [showEditProductModal, setShowEditProductModal] = useState(false);
   const [newProduct, setNewProduct] = useState({ 
     name: '', 
     description: '', 
@@ -34,6 +35,7 @@ const CatalogPage = () => {
     categoryId: '',
     stock: '' 
   });
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -131,7 +133,7 @@ const CatalogPage = () => {
           name: newProduct.name,
           description: newProduct.description,
           price: parseFloat(newProduct.price),
-          categoryId: Number(newProduct.categoryId),
+          categoryId: newProduct.categoryId,
           stock: parseInt(newProduct.stock, 10)
         }),
       });
@@ -142,13 +144,17 @@ const CatalogPage = () => {
         setNewProduct({ name: '', description: '', price: '', categoryId: '', stock: '' });
         setShowAddProductModal(false);
         fetchProducts();
+      } else {
+        const errorData = await response.json();
+        alert(`Error adding product: ${errorData.message || 'Unknown error'}`);
       }
     } catch (error) {
       console.error('Error adding product:', error);
+      alert('Failed to add product. Please try again.');
     }
   };
 
-  const handleEditProduct = (productId: string) => {
+  const handleEditProduct = (product: Product) => {
     const token = localStorage.getItem('token');
     if (!token) {
       alert('Please log in to edit products');
@@ -156,7 +162,48 @@ const CatalogPage = () => {
       return;
     }
 
-    console.log('Edit product:', productId);
+    setEditingProduct(product);
+    setShowEditProductModal(true);
+  };
+
+  const handleSaveEditedProduct = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingProduct) return;
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+      alert('Please log in to edit products');
+      navigate('/login');
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_URL}/products/${editingProduct.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          name: editingProduct.name,
+          description: editingProduct.description,
+          price: typeof editingProduct.price === 'string' ? parseFloat(editingProduct.price) : editingProduct.price,
+          categoryId: editingProduct.categoryId,
+          stock: typeof editingProduct.stock === 'string' ? parseInt(editingProduct.stock, 10) : editingProduct.stock
+        }),
+      });
+
+      if (response.ok) {
+        setShowEditProductModal(false);
+        fetchProducts();
+      } else {
+        const errorData = await response.json();
+        alert(`Error updating product: ${errorData.message || 'Unknown error'}`);
+      }
+    } catch (error) {
+      console.error('Error updating product:', error);
+      alert('Failed to update product. Please try again.');
+    }
   };
 
   const handleDeleteProduct = async (productId: string) => {
@@ -179,9 +226,12 @@ const CatalogPage = () => {
 
       if (response.ok) {
         setProducts(products.filter((product) => product.id !== productId));
+      } else {
+        alert('Failed to delete product. Please try again.');
       }
     } catch (error) {
       console.error('Error deleting product:', error);
+      alert('Failed to delete product. Please try again.');
     }
   };
 
@@ -191,6 +241,16 @@ const CatalogPage = () => {
       ...newProduct,
       [name]: value,
     });
+  };
+
+  const handleEditProductInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    if (editingProduct) {
+      setEditingProduct({
+        ...editingProduct,
+        [name]: value,
+      });
+    }
   };
 
   return (
@@ -263,11 +323,12 @@ const CatalogPage = () => {
                 <tr key={product.id} className="border">
                   <td className="border p-2">{product.name}</td>
                   <td className="border p-2">{product.description}</td>
-                  <td className="border p-2">{product.category.name}</td>
-                  <td className="border p-2">${Number(product.price).toFixed(2)}</td>
+                  <td className="border p-2">${typeof product.price === 'number' ? product.price.toFixed(2) : Number(product.price).toFixed(2)}</td>
+                  <td className="border p-2">{product.category?.name || 'N/A'}</td>
+                  <td className="border p-2">{product.stock}</td>
                   <td className="border p-2">
                     <div className="flex space-x-2">
-                      <button onClick={() => handleEditProduct(product.id)} className="text-blue-500">Edit</button>
+                      <button onClick={() => handleEditProduct(product)} className="text-blue-500">Edit</button>
                       <button onClick={() => handleDeleteProduct(product.id)} className="text-red-500">Delete</button>
                     </div>
                   </td>
@@ -380,6 +441,78 @@ const CatalogPage = () => {
                 </button>
                 <button type="submit" className="px-4 py-2 bg-blue-500 text-white rounded-md">
                   Add
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Product Modal */}
+      {showEditProductModal && editingProduct && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
+            <h2 className="text-xl font-bold mb-4">Edit Product</h2>
+            <form onSubmit={handleSaveEditedProduct}>
+              <input
+                type="text"
+                name="name"
+                value={editingProduct.name}
+                onChange={handleEditProductInputChange}
+                className="w-full px-3 py-2 border rounded-md mb-4"
+                placeholder="Product name"
+                required
+              />
+              <textarea
+                name="description"
+                value={editingProduct.description}
+                onChange={handleEditProductInputChange}
+                className="w-full px-3 py-2 border rounded-md mb-4"
+                placeholder="Product description"
+                rows={3}
+                required
+              />
+              <input
+                type="number"
+                name="price"
+                value={typeof editingProduct.price === 'string' ? editingProduct.price : editingProduct.price.toString()}
+                onChange={handleEditProductInputChange}
+                className="w-full px-3 py-2 border rounded-md mb-4"
+                placeholder="Price"
+                step="0.01"
+                min="0"
+                required
+              />
+              <select
+                name="categoryId"
+                value={editingProduct.categoryId}
+                onChange={handleEditProductInputChange}
+                className="w-full px-3 py-2 border rounded-md mb-4"
+                required
+              >
+                <option value="">Select a category</option>
+                {categories.map((category) => (
+                  <option key={category.id} value={category.id}>
+                    {category.name}
+                  </option>
+                ))}
+              </select>
+              <input
+                type="number"
+                name="stock"
+                value={typeof editingProduct.stock === 'string' ? editingProduct.stock : editingProduct.stock.toString()}
+                onChange={handleEditProductInputChange}
+                className="w-full px-3 py-2 border rounded-md mb-4"
+                placeholder="Stock quantity"
+                min="0"
+                required
+              />
+              <div className="flex justify-end space-x-2">
+                <button type="button" onClick={() => setShowEditProductModal(false)} className="px-4 py-2 border rounded-md">
+                  Cancel
+                </button>
+                <button type="submit" className="px-4 py-2 bg-blue-500 text-white rounded-md">
+                  Save Changes
                 </button>
               </div>
             </form>
