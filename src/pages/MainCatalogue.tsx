@@ -27,13 +27,15 @@ const CatalogPage = () => {
   const [showAddCategoryModal, setShowAddCategoryModal] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
   const [showAddProductModal, setShowAddProductModal] = useState(false);
-  const [newProduct, setNewProduct] = useState({ 
-    name: '', 
-    description: '', 
-    price: '', 
+  const [newProduct, setNewProduct] = useState({
+    name: '',
+    description: '',
+    price: '',
     categoryId: '',
-    stock: '' 
+    stock: ''
   });
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -110,19 +112,24 @@ const CatalogPage = () => {
     }
   };
 
-  const handleAddProduct = async (e: React.FormEvent) => {
+  const handleSubmitProduct = async (e: React.FormEvent) => {
     e.preventDefault();
 
     const token = localStorage.getItem('token');
     if (!token) {
-      alert('Please log in to add products');
+      alert('Please log in to manage products');
       navigate('/login');
       return;
     }
 
+    const method = editingProduct ? 'PUT' : 'POST';
+    const url = editingProduct
+      ? `${API_URL}/products/${editingProduct.id}`
+      : `${API_URL}/products`;
+
     try {
-      const response = await fetch(`${API_URL}/products`, {
-        method: 'POST',
+      const response = await fetch(url, {
+        method,
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
@@ -132,19 +139,18 @@ const CatalogPage = () => {
           description: newProduct.description,
           price: parseFloat(newProduct.price),
           categoryId: Number(newProduct.categoryId),
-          stock: parseInt(newProduct.stock, 10)
+          stock: parseInt(newProduct.stock, 10),
         }),
       });
 
       if (response.ok) {
-        const addedProduct = await response.json();
-        setProducts([...products, addedProduct]);
         setNewProduct({ name: '', description: '', price: '', categoryId: '', stock: '' });
         setShowAddProductModal(false);
+        setEditingProduct(null);
         fetchProducts();
       }
     } catch (error) {
-      console.error('Error adding product:', error);
+      console.error('Error submitting product:', error);
     }
   };
 
@@ -156,7 +162,18 @@ const CatalogPage = () => {
       return;
     }
 
-    console.log('Edit product:', productId);
+    const productToEdit = products.find((p) => p.id === productId);
+    if (productToEdit) {
+      setEditingProduct(productToEdit);
+      setNewProduct({
+        name: productToEdit.name,
+        description: productToEdit.description,
+        price: String(productToEdit.price),
+        categoryId: String(productToEdit.categoryId),
+        stock: String(productToEdit.stock),
+      });
+      setShowAddProductModal(true);
+    }
   };
 
   const handleDeleteProduct = async (productId: string) => {
@@ -252,7 +269,7 @@ const CatalogPage = () => {
               <tr className="border">
                 <th className="border p-2 text-left">Name</th>
                 <th className="border p-2 text-left">Description</th>
-                <th className="border p-2 text-left">Price</th> 
+                <th className="border p-2 text-left">Price</th>
                 <th className="border p-2 text-left">Category</th>
                 <th className="border p-2 text-left">Stock</th>
                 <th className="border p-2 text-left">Actions</th>
@@ -281,7 +298,11 @@ const CatalogPage = () => {
           <div className="mt-4">
             <button
               className="bg-green-400 hover:bg-green-500 text-white font-medium py-2 px-6 rounded-full"
-              onClick={() => setShowAddProductModal(true)}
+              onClick={() => {
+                setNewProduct({ name: '', description: '', price: '', categoryId: '', stock: '' });
+                setEditingProduct(null);
+                setShowAddProductModal(true);
+              }}
             >
               Add Product
             </button>
@@ -316,12 +337,12 @@ const CatalogPage = () => {
         </div>
       )}
 
-      {/* Add Product Modal */}
+      {/* Add/Edit Product Modal */}
       {showAddProductModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
-            <h2 className="text-xl font-bold mb-4">Add Product</h2>
-            <form onSubmit={handleAddProduct}>
+            <h2 className="text-xl font-bold mb-4">{editingProduct ? 'Edit Product' : 'Add Product'}</h2>
+            <form onSubmit={handleSubmitProduct}>
               <input
                 type="text"
                 name="name"
@@ -376,11 +397,18 @@ const CatalogPage = () => {
                 required
               />
               <div className="flex justify-end space-x-2">
-                <button type="button" onClick={() => setShowAddProductModal(false)} className="px-4 py-2 border rounded-md">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowAddProductModal(false);
+                    setEditingProduct(null);
+                  }}
+                  className="px-4 py-2 border rounded-md"
+                >
                   Cancel
                 </button>
                 <button type="submit" className="px-4 py-2 bg-blue-500 text-white rounded-md">
-                  Add
+                  {editingProduct ? 'Update' : 'Add'}
                 </button>
               </div>
             </form>
