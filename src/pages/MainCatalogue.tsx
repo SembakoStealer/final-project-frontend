@@ -263,7 +263,6 @@ const CatalogPage = () => {
                 <tr key={product.id} className="border">
                   <td className="border p-2">{product.name}</td>
                   <td className="border p-2">{product.description}</td>
-                  <td className="border p-2">${product.price.toFixed(2)}</td>
                   <td className="border p-2">{product.category.name}</td>
                   <td className="border p-2">${Number(product.price).toFixed(2)}</td>
                   <td className="border p-2">
