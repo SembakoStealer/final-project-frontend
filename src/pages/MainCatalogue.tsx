@@ -122,7 +122,7 @@ const CatalogPage = () => {
       return;
     }
 
-    const method = editingProduct ? 'PUT' : 'POST';
+    const method = editingProduct ? 'PATCH' : 'POST';
     const url = editingProduct
       ? `${API_URL}/products/${editingProduct.id}`
       : `${API_URL}/products`;
