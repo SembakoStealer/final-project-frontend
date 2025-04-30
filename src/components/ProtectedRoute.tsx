@@ -19,7 +19,7 @@ const ProtectedRoute = () => {
 
       try {
         // Verify token with your backend
-        const response = await fetch('http://localhost:3000/auth/verify', {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/verify`, {
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${token}`
