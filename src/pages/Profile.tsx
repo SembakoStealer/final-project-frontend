@@ -6,7 +6,7 @@ interface UserProfile {
   username: string;
   email: string;
   bio: string;
-  createdAt: string;
+  created_at: string;
 }
 
 const ProfilePage = () => {
@@ -14,7 +14,7 @@ const ProfilePage = () => {
     username: '',
     email: '',
     bio: '',
-    createdAt: '',
+    created_at: '',
   });
 
   const [editMode, setEditMode] = useState({
@@ -45,15 +45,15 @@ const ProfilePage = () => {
           }
         );
 
-        const formattedDate = res.data.createdAt
-          ? new Date(res.data.createdAt).toISOString().split('T')[0]
+        const formattedDate = res.data.created_at
+          ? new Date(res.data.created_at).toISOString().split('T')[0]
           : '';
 
         setProfile({
           username: res.data.username || '',
           email: res.data.email || '',
           bio: res.data.bio || '',
-          createdAt: formattedDate,
+          created_at: formattedDate,
         });
       } catch (err) {
         console.error('Error fetching profile:', err);
@@ -172,7 +172,7 @@ const ProfilePage = () => {
               <label className="block text-sm font-bold mb-2">Created At:</label>
               <input
                 type="text"
-                value={profile.createdAt}
+                value={profile.created_at}
                 readOnly
                 className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white"
               />
