@@ -11,7 +11,7 @@ type RegisterInput = {
 };
 
 const RegisterPage = () => {
-  const navigate = useNavigate();
+  const navigate = useNavigate(); // Make sure you have this import from react-router-dom
   const [showPassword, setShowPassword] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
