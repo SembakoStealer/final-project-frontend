@@ -60,6 +60,11 @@ const ProfilePage = () => {
     fetchProfile();
   }, [navigate]);
 
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    navigate('/login');
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -71,9 +76,18 @@ const ProfilePage = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Back button */}
-      <div className="container mx-auto px-4 py-6">
-        <button onClick={() => navigate('/catalog')} className="font-bold text-xl">
+      <div className="container mx-auto px-4 py-6 flex justify-between items-center">
+        <button 
+          onClick={() => navigate('/catalog')} 
+          className="font-bold text-xl cursor-pointer hover:text-blue-600"
+        >
           Back
+        </button>
+        <button
+          onClick={handleLogout}
+          className="bg-red-500 hover:bg-red-600 text-white font-medium py-2 px-4 rounded cursor-pointer"
+        >
+          Logout
         </button>
       </div>
 
