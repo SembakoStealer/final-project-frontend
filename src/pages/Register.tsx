@@ -32,7 +32,7 @@ const RegisterPage = () => {
       );
 
       localStorage.setItem('token', response.data.access_token);
-      navigate('/catalog'); // redirect to homepage after registration
+      navigate('/login'); // redirect to homepage after registration
     } catch (error: any) {
       const message = error.response?.data?.message || 'Registration failed';
       setErrorMessage(message);
