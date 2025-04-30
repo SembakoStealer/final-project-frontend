@@ -7,6 +7,7 @@ interface UserProfile {
   email: string;
   bio: string;
   created_at: string;
+  updated_at: string; // Added updated_at field as optional
 }
 
 const ProfilePage = () => {
@@ -15,6 +16,7 @@ const ProfilePage = () => {
     email: '',
     bio: '',
     created_at: '',
+    updated_at: '', // Initialize updated_at
   });
 
   const [editMode, setEditMode] = useState({
@@ -45,15 +47,21 @@ const ProfilePage = () => {
           }
         );
 
-        const formattedDate = res.data.created_at
+        // Format dates
+        const formattedCreatedDate = res.data.created_at
           ? new Date(res.data.created_at).toISOString().split('T')[0]
           : '';
+          
+        const formattedUpdatedDate = res.data.updated_at
+          ? new Date(res.data.updated_at).toISOString().split('T')[0]
+          : 'Never updated';
 
         setProfile({
           username: res.data.username || '',
           email: res.data.email || '',
           bio: res.data.bio || '',
-          created_at: formattedDate,
+          created_at: formattedCreatedDate,
+          updated_at: formattedUpdatedDate,
         });
       } catch (err) {
         console.error('Error fetching profile:', err);
@@ -168,6 +176,7 @@ const ProfilePage = () => {
                 </div>
               </div>
             ))}
+            
             <div>
               <label className="block text-sm font-bold mb-2">Created At:</label>
               <input
@@ -177,6 +186,18 @@ const ProfilePage = () => {
                 className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white"
               />
             </div>
+            
+            {/* Added Updated At field */}
+            <div>
+              <label className="block text-sm font-bold mb-2">Updated At:</label>
+              <input
+                type="text"
+                value={profile.updated_at}
+                readOnly
+                className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white"
+              />
+            </div>
+            
             <div className="text-right">
               <button
                 onClick={handleSaveChanges}
