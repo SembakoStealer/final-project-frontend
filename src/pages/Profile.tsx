@@ -69,7 +69,7 @@ const ProfilePage = () => {
     <div className="min-h-screen bg-gray-50">
       {/* Back button */}
       <div className="container mx-auto px-4 py-6">
-        <button onClick={() => navigate('/home')} className="font-bold text-xl">
+        <button onClick={() => navigate('/catalog')} className="font-bold text-xl">
           Back
         </button>
       </div>

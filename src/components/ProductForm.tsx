@@ -1,5 +1,5 @@
 import { UseMutateFunction } from "@tanstack/react-query";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
 
 interface ProductFormProps {
@@ -17,12 +17,14 @@ export type ProductFormInput = {
 };
 
 const ProductForm: React.FC<ProductFormProps> = (props) => {
+  const [isLoading, setIsLoading] = useState(false);
   const {
     register,
     handleSubmit,
     setValue,
     formState: { errors }
   } = useForm<ProductFormInput>();
+  
   useEffect(() => {
     if (props.defaultInputData) {
       setValue("title", props.defaultInputData.title);
@@ -32,13 +34,20 @@ const ProductForm: React.FC<ProductFormProps> = (props) => {
       setValue("price", props.defaultInputData.price);
     }
   }, [props.defaultInputData]);
-  const onSubmit: SubmitHandler<ProductFormInput> = (data) => {
+  
+  const onSubmit: SubmitHandler<ProductFormInput> = async (data) => {
     if (props.isEdit) {
       if (!confirm("Are you sure want to update product data ? ")) {
         return;
       }
     }
-    props.mutateFn(data);
+    
+    setIsLoading(true);
+    try {
+      await props.mutateFn(data);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -164,16 +173,38 @@ const ProductForm: React.FC<ProductFormProps> = (props) => {
         {props.isEdit ? (
           <button
             type="submit"
-            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+            disabled={isLoading}
+            className={`bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
           >
-            Save Product
+            {isLoading ? (
+              <span className="flex items-center">
+                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Saving...
+              </span>
+            ) : (
+              'Save Product'
+            )}
           </button>
         ) : (
           <button
             type="submit"
-            className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+            disabled={isLoading}
+            className={`bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
           >
-            Add Product
+            {isLoading ? (
+              <span className="flex items-center">
+                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Adding...
+              </span>
+            ) : (
+              'Add Product'
+            )}
           </button>
         )}
       </div>
