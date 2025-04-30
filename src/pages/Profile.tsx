@@ -77,7 +77,7 @@ const ProfilePage = () => {
 
     try {
       setUpdating(true);
-      await axios.put(
+      await axios.patch(
         `${import.meta.env.VITE_API_URL}/user`,
         {
           name: profile.name,
