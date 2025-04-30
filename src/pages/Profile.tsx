@@ -30,7 +30,7 @@ const ProfilePage = () => {
 
       try {
         const res = await axios.get<UserProfile>(
-          `${import.meta.env.VITE_API_URL}/users/profile`,
+          `${import.meta.env.VITE_API_URL}/user`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
