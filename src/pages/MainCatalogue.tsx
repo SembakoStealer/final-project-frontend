@@ -210,6 +210,38 @@ const CatalogPage = () => {
     });
   };
 
+  const handleDeleteCategory = async (categoryId: string) => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      alert('Please log in to delete categories');
+      navigate('/login');
+      return;
+    }
+
+    if (!window.confirm('Are you sure you want to delete this category? All products in this category will also be deleted.')) return;
+
+    try {
+      const response = await fetch(`${API_URL}/categories/${categoryId}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        setCategories(categories.filter((category) => category.id !== categoryId));
+        // If the deleted category was active, reset to show all products
+        if (activeCategory === categoryId) {
+          setActiveCategory(null);
+        }
+        // Refresh products list
+        fetchProducts();
+      }
+    } catch (error) {
+      console.error('Error deleting category:', error);
+    }
+  };
+
   return (
     <div className="flex min-h-screen bg-gray-50">
       {/* Sidebar */}
@@ -224,13 +256,21 @@ const CatalogPage = () => {
           </button>
 
           {categories.map((category) => (
-            <button
-              key={category.id}
-              className={`text-left py-1 hover:underline ${activeCategory === category.id ? 'font-bold' : ''}`}
-              onClick={() => handleCategoryClick(category.id)}
-            >
-              {category.name}
-            </button>
+            <div key={category.id} className="flex justify-between items-center">
+              <button
+                className={`text-left py-1 hover:underline ${activeCategory === category.id ? 'font-bold' : ''}`}
+                onClick={() => handleCategoryClick(category.id)}
+              >
+                {category.name}
+              </button>
+              <button 
+                onClick={() => handleDeleteCategory(category.id)}
+                className="text-red-500 text-sm hover:text-red-700"
+                title="Delete category"
+              >
+                ×
+              </button>
+            </div>
           ))}
 
           <button
