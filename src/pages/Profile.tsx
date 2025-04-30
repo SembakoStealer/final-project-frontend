@@ -139,7 +139,7 @@ const ProfilePage = () => {
 
           {/* Profile Fields */}
           <div className="space-y-4">
-            {['name', 'email', 'bio'].map((field) => (
+            {['username', 'email', 'bio'].map((field) => (
               <div key={field}>
                 <label className="block text-sm font-bold mb-2 capitalize">
                   {field}:
