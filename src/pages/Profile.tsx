@@ -38,13 +38,16 @@ const ProfilePage = () => {
           }
         );
 
-        const formattedDate = new Date(res.data.createdAt).toISOString().split('T')[0];
+        const formattedDate = res.data.createdAt
+        ? new Date(res.data.createdAt).toISOString().split('T')[0]
+        : '';
+
 
         setProfile({
           name: res.data.name || '',
           email: res.data.email || '',
           bio: res.data.bio || '',
-          createdAt: formattedDate,
+          createdAt: formattedDate,        
         });
       } catch (err) {
         console.error('Error fetching profile:', err);
