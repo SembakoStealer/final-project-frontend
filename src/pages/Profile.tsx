@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 interface UserProfile {
-  name: string;
+  username: string;
   email: string;
   bio: string;
   createdAt: string;
@@ -11,14 +11,14 @@ interface UserProfile {
 
 const ProfilePage = () => {
   const [profile, setProfile] = useState<UserProfile>({
-    name: '',
+    username: '',
     email: '',
     bio: '',
     createdAt: '',
   });
 
   const [editMode, setEditMode] = useState({
-    name: false,
+    username: false,
     email: false,
     bio: false,
   });
@@ -50,7 +50,7 @@ const ProfilePage = () => {
           : '';
 
         setProfile({
-          name: res.data.name || '',
+          username: res.data.username || '',
           email: res.data.email || '',
           bio: res.data.bio || '',
           createdAt: formattedDate,
@@ -80,7 +80,7 @@ const ProfilePage = () => {
       await axios.patch(
         `${import.meta.env.VITE_API_URL}/user`,
         {
-          name: profile.name,
+          username: profile.username,
           email: profile.email,
           bio: profile.bio,
         },
@@ -90,7 +90,7 @@ const ProfilePage = () => {
           },
         }
       );
-      setEditMode({ name: false, email: false, bio: false });
+      setEditMode({ username: false, email: false, bio: false });
     } catch (error) {
       console.error('Error updating profile:', error);
     } finally {
