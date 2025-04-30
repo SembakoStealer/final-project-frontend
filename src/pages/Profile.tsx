@@ -1,4 +1,3 @@
-// src/pages/ProfilePage.tsx
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
@@ -17,7 +16,15 @@ const ProfilePage = () => {
     bio: '',
     createdAt: '',
   });
+
+  const [editMode, setEditMode] = useState({
+    name: false,
+    email: false,
+    bio: false,
+  });
+
   const [loading, setLoading] = useState(true);
+  const [updating, setUpdating] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -39,15 +46,14 @@ const ProfilePage = () => {
         );
 
         const formattedDate = res.data.createdAt
-        ? new Date(res.data.createdAt).toISOString().split('T')[0]
-        : '';
-
+          ? new Date(res.data.createdAt).toISOString().split('T')[0]
+          : '';
 
         setProfile({
           name: res.data.name || '',
           email: res.data.email || '',
           bio: res.data.bio || '',
-          createdAt: formattedDate,        
+          createdAt: formattedDate,
         });
       } catch (err) {
         console.error('Error fetching profile:', err);
@@ -65,6 +71,37 @@ const ProfilePage = () => {
     navigate('/login');
   };
 
+  const handleSaveChanges = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    try {
+      setUpdating(true);
+      await axios.put(
+        `${import.meta.env.VITE_API_URL}/user`,
+        {
+          name: profile.name,
+          email: profile.email,
+          bio: profile.bio,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      setEditMode({ name: false, email: false, bio: false });
+    } catch (error) {
+      console.error('Error updating profile:', error);
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  const handleChange = (field: keyof UserProfile, value: string) => {
+    setProfile((prev) => ({ ...prev, [field]: value }));
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -75,13 +112,14 @@ const ProfilePage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Back button */}
+      {/* Top Bar */}
       <div className="container mx-auto px-4 py-6 flex justify-between items-center">
-        <button 
-          onClick={() => navigate('/catalog')} 
+        <button
+          onClick={() => navigate('/catalog')}
           className="font-bold text-xl cursor-pointer hover:text-blue-600"
+          style={{ cursor: 'pointer' }}
         >
-          Back
+          ← Back
         </button>
         <button
           onClick={handleLogout}
@@ -101,33 +139,35 @@ const ProfilePage = () => {
 
           {/* Profile Fields */}
           <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-bold mb-2">Name:</label>
-              <input
-                type="text"
-                value={profile.name}
-                readOnly
-                className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-bold mb-2">Email:</label>
-              <input
-                type="email"
-                value={profile.email}
-                readOnly
-                className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-bold mb-2">Bio:</label>
-              <input
-                type="text"
-                value={profile.bio || 'Add Something Here'}
-                readOnly
-                className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white"
-              />
-            </div>
+            {['name', 'email', 'bio'].map((field) => (
+              <div key={field}>
+                <label className="block text-sm font-bold mb-2 capitalize">
+                  {field}:
+                </label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={profile[field as keyof UserProfile] || ''}
+                    readOnly={!editMode[field as keyof typeof editMode]}
+                    onChange={(e) =>
+                      handleChange(field as keyof UserProfile, e.target.value)
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white"
+                  />
+                  <button
+                    onClick={() =>
+                      setEditMode((prev) => ({
+                        ...prev,
+                        [field]: !prev[field as keyof typeof editMode],
+                      }))
+                    }
+                    className="text-gray-600 hover:text-blue-600 cursor-pointer"
+                  >
+                    ✏️
+                  </button>
+                </div>
+              </div>
+            ))}
             <div>
               <label className="block text-sm font-bold mb-2">Created At:</label>
               <input
@@ -136,6 +176,15 @@ const ProfilePage = () => {
                 readOnly
                 className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white"
               />
+            </div>
+            <div className="text-right">
+              <button
+                onClick={handleSaveChanges}
+                disabled={updating}
+                className="mt-4 bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded"
+              >
+                {updating ? 'Saving...' : 'Save Changes'}
+              </button>
             </div>
           </div>
         </div>
